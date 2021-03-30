@@ -14,9 +14,3 @@
 ## 변수 추출
 
 ## 데이터 전처리
-
-
-### [통계 특징과 관련된 변수 추출]
-
-x,y,z 데이터의 크기를 구하는 
--	(mean, min, max ,sd ,skewness, rms, rss, IQR, kurtosis) + range 통계 특징을 추가 하였다.
