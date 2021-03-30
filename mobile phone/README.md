@@ -13,13 +13,10 @@
 
 ## 변수 추출
 
+## 데이터 전처리
+
+
 ### [통계 특징과 관련된 변수 추출]
 
-기존에는 roationRate와 userAcceleraion 2개의 변수만 사용해서 통계 특징을 추출하였다. 
-
--	“gravity” 와 “attitude” 관련 변수들에 대한 통계 특징도 추출하였다.
-* “gravity” 변수는 mag 함수를 적용하여 통계 특징을 추출하였고, “attitude” 변수는 원래값에서 통계 특징을 추출하였다.
+x,y,z 데이터의 크기를 구하는 
 -	(mean, min, max ,sd ,skewness, rms, rss, IQR, kurtosis) + range 통계 특징을 추가 하였다.
-* range는 최대값과 최솟값의 차이를 구해 범위를 알려주는 함수이다.
-
-
