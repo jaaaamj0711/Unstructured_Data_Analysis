@@ -56,6 +56,11 @@ skewness <- function(x){
 # rss 함수 정의
 rss<-function(x) rms(x)*(length(x))*0.5
 
+# range 함수 정의
+range_ <- function(x){
+  (diff(range(x)))
+}
+
 # mag 적용(gravity 추가)
 HAR_total<- mag(HAR_total, "userAcceleration")
 HAR_total<- mag(HAR_total, "rotationRate")
@@ -64,16 +69,12 @@ HAR_total<-mag(HAR_total, "gravity")
 ## 변수 추출 ##
 # 통계 특징 구하기("maggravity","attitude.roll","attitude.pitch","attitude.yaw" 추가)
 HAR_summary_extend<- HAR_total %>% group_by(id,exp_no,activity,d) %>% 
-  summarise_at(.vars=c("maguserAcceleration","magrotationRate", "maggravity","attitude.roll","attitude.pitch","attitude.yaw"), 
-               .funs=c(mean, min, max ,sd ,skewness, rms, rss, IQR, e1071::kurtosis))
-
-# 변수별로 range값을 도출해 새로운 변수를 생성
-HAR_summary_extend$magrotationRate_range<- HAR_summary_extend$magrotationRate_fn3 - HAR_summary_extend$magrotationRate_fn2
-HAR_summary_extend$maguserAcceleration_range<- HAR_summary_extend$maguserAcceleration_fn3 - HAR_summary_extend$maguserAcceleration_fn2
-HAR_summary_extend$attitude.roll_range<- HAR_summary_extend$attitude.roll_fn3 - HAR_summary_extend$attitude.roll_fn2
-HAR_summary_extend$attitude.pitch_range<- HAR_summary_extend$attitude.pitch_fn3 - HAR_summary_extend$attitude.pitch_fn2
-HAR_summary_extend$attitude.yaw_range<- HAR_summary_extend$attitude.yaw_fn3 - HAR_summary_extend$attitude.yaw_fn2
-HAR_summary_extend$maggravity_range<-HAR_summary_extend$maggravity_fn3 - HAR_summary_extend$maggravity_fn2
+  summarise_at(.vars=c("gravity.x","gravity.y","gravity.z",
+                       "userAcceleration.x","userAcceleration.y","userAcceleration.z",
+                       "rotationRate.x","rotationRate.y","rotationRate.z",
+                       "maguserAcceleration","magrotationRate", 
+                       "maggravity","attitude.roll","attitude.pitch","attitude.yaw"), 
+               .funs=c(mean, min, max ,sd ,skewness, rms, rss, IQR, e1071::kurtosis, range_))
 
 # 널값 확인 
 colSums(is.na(HAR_summary_extend))
@@ -99,6 +100,15 @@ pred_df %>% select(pred,actual) %>% table
 # confusionMatrix 생성
 Static_conf<- caret::confusionMatrix(pred_df$pred, pred_df$actual)
 Static_conf
+
+# 중요 변수 추출
+Static_model = xgboost(data = x,label = as.integer(as.factor(y))-1, num_class = levels(as.factor(y)) %>% length,
+                     nfold = 10, nrounds = 500, early_stopping_rounds = 8, booster = 'gbtree',
+                     objective = 'multi:softprob', eval_metric = 'mlogloss', 
+                     verbose = F)
+
+Static_imp<- xgb.importance(model = Static_model)
+
 
 #### ####
 
@@ -195,6 +205,7 @@ y = Peak_final2$activity
 
 # xgboost 모델 학습(10-fold)
 set.seed(1004)
+
 Peak_model = xgb.cv(data = x,label = as.integer(as.factor(y))-1, num_class = levels(as.factor(y)) %>% length,
                     nfold = 10, nrounds = 500, early_stopping_rounds = 8, booster = 'gbtree',
                     objective = 'multi:softprob', eval_metric = 'mlogloss', 
@@ -209,6 +220,15 @@ pred_df %>% select(pred,actual) %>% table
 # confusionMatrix 생성
 Peak_conf<- caret::confusionMatrix(pred_df$pred, pred_df$actual)
 Peak_conf
+
+# 중요 변수 추출
+Peak_model = xgboost(data = x,label = as.integer(as.factor(y))-1, num_class = levels(as.factor(y)) %>% length,
+                       nfold = 10, nrounds = 500, early_stopping_rounds = 8, booster = 'gbtree',
+                       objective = 'multi:softprob', eval_metric = 'mlogloss', 
+                       verbose = F)
+
+Peak_imp<- xgb.importance(model = Peak_model)
+
 
 #### ####
 
@@ -229,22 +249,19 @@ for(f in fls){
 fft_data<- mag(fft_data, "userAcceleration")
 fft_data<- mag(fft_data, "rotationRate")
 fft_data<-mag(fft_data, "gravity")
+colnames(fft_data)
 
 ## 변수 추출 ##
 fft_data_summary<- fft_data %>% group_by(id,exp_no,activity,d) %>% 
-  summarise_at(.vars=c("maguserAcceleration","magrotationRate", "maggravity","attitude.roll","attitude.pitch","attitude.yaw"), 
-               .funs=c(mean, min, max ,sd ,skewness, rms, rss, IQR, e1071::kurtosis))
+  summarise_at(.vars=c("gravity.x","gravity.y","gravity.z",
+                       "userAcceleration.x","userAcceleration.y","userAcceleration.z",
+                       "rotationRate.x","rotationRate.y","rotationRate.z",
+                       "maguserAcceleration","magrotationRate", 
+                       "maggravity","attitude.roll","attitude.pitch","attitude.yaw"), 
+               .funs=c(mean, min, max ,sd ,skewness, rms, rss, IQR, e1071::kurtosis, range_))
 
 # 변수명 변경
 names(fft_data_summary)<- str_replace_all(colnames(fft_data_summary),'fn',"fft")
-
-# 변수별로 range값을 도출해 새로운 변수를 생성
-fft_data_summary$magrotationRate_fft_range<- fft_data_summary$magrotationRate_fft3 - fft_data_summary$magrotationRate_fft2
-fft_data_summary$maguserAcceleration_fft_range<- fft_data_summary$maguserAcceleration_fft3 - fft_data_summary$maguserAcceleration_fft2
-fft_data_summary$attitude.roll_fft_range<- fft_data_summary$attitude.roll_fft3 - fft_data_summary$attitude.roll_fft2
-fft_data_summary$attitude.pitch_fft_range<- fft_data_summary$attitude.pitch_fft3 - fft_data_summary$attitude.pitch_fft2
-fft_data_summary$attitude.yaw_fft_range<- fft_data_summary$attitude.yaw_fft3 - fft_data_summary$attitude.yaw_fft2
-fft_data_summary$maggravity_fft_range<-fft_data_summary$maggravity_fft3 - fft_data_summary$maggravity_fft2
 
 ## FFT 변환 변수만 학습 ##
 # x,y 구분
@@ -268,6 +285,14 @@ pred_df %>% select(pred,actual) %>% table
 Fourier_conf<- caret::confusionMatrix(pred_df$pred, pred_df$actual)
 Fourier_conf
 
+# 중요 변수 추출
+Fourier_model = xgboost(data = x,label = as.integer(as.factor(y))-1, num_class = levels(as.factor(y)) %>% length,
+                     nfold = 10, nrounds = 500, early_stopping_rounds = 8, booster = 'gbtree',
+                     objective = 'multi:softprob', eval_metric = 'mlogloss', 
+                     verbose = F)
+
+Fourier_imp<- xgb.importance(model = Fourier_model)
+
 #### ####
 
 #### 변화 분석 변수 ####
@@ -277,8 +302,9 @@ ch_pt<-data.frame()
 for(d in fls){
   f<-get(d)
   f<-mag(f, "rotationRate")
-  f<-mag(f, "userAcceleration") # method 값을 PELT 방식으로 바꿈(기본값은 AMOC)
-  rslt<-sapply(f %>% select(magrotationRate, maguserAcceleration), cpt.mean, method = "PELT")
+  f<-mag(f, "userAcceleration")
+  f<-mag(f, "gravity")# method 값을 PELT 방식으로 바꿈(기본값은 AMOC)
+  rslt<-sapply(f %>% select(magrotationRate, maguserAcceleration, maggravity), cpt.mean, method = "PELT")
   rslt_cpts1<-cpts(rslt$magrotationRate)
   # 변화시점에 해당하는 값을 가져와 통계 특징을 추출
   cp1_mean<- ifelse(length(rslt_cpts1) != 0, mean(f$magrotationRate[rslt_cpts1]),0)
@@ -346,6 +372,10 @@ for(i in 1:nrow(ch_pt)){
 
 ch_pt2<-cbind(ch_pt, temp)
 
+# 널값 확인 후 0으로 변경
+colSums(is.na(ch_pt2))
+ch_pt2[is.na(ch_pt2)] <- 0
+
 ## 변화 변수만 학습 ##
 # x,y 구분
 x = ch_pt2 %>% ungroup %>% select(-d, -exp_no, -id, -activity) %>% data.matrix
@@ -367,6 +397,14 @@ pred_df %>% select(pred,actual) %>% table
 # confusionMatrix 생성
 Chpoint_conf<- caret::confusionMatrix(pred_df$pred, pred_df$actual)
 Chpoint_conf
+
+# 중요 변수 추출
+Chpoint_model = xgboost(data = x,label = as.integer(as.factor(y))-1, num_class = levels(as.factor(y)) %>% length,
+                        nfold = 10, nrounds = 500, early_stopping_rounds = 8, booster = 'gbtree',
+                        objective = 'multi:softprob', eval_metric = 'mlogloss', 
+                        verbose = F)
+
+Chpoint_imp<- xgb.importance(model = Chpoint_model)
 
 ### 모든 변수를 합하여 학습 진행 ####
 Static<- HAR_summary_extend %>% ungroup() %>% select(-exp_no,-id,-activity)
@@ -410,12 +448,70 @@ cat("푸리에 변환 특징 accuracy는", round(Fourier_conf$overall[[1]],2),"�
 cat("변화 특징 accuracy는", round(Chpoint_conf$overall[[1]],2),"입니다.")
 cat("총 accuracy는", round(all_conf$overall[[1]],2),"입니다.")
 
-## 변수 중요도 살펴보기(xgboost 함수에서 제공)
+## 가장 높은 정확도를 나타낸 통계특징과 푸리에 변환 특징 변수들만 사용하여 예측 ##
+Static<- HAR_summary_extend %>% ungroup() %>% select(-exp_no,-id,-activity)
+Fourier<- fft_data_summary %>% ungroup() %>% select(-exp_no,-id)
+Sta_Fo<- merge(Static, Fourier, by = 'd')
+Sta_Fo<- Sta_Fo %>% ungroup() %>% select(-d)
 
-model = xgboost(data = x,label = as.integer(as.factor(y))-1, num_class = levels(as.factor(y)) %>% length,
-                nfold = 10, nrounds = 500, early_stopping_rounds = 8, booster = 'gbtree',
-                objective = 'multi:softprob', eval_metric = 'mlogloss', 
-                verbose = F)
+# 널값 확인 후 0으로 변경
+colSums(is.na(Sta_Fo))
+Sta_Fo[is.na(Sta_Fo)] <- 0
 
-imp<- xgb.importance(model = model)
-xgb.ggplot.importance(imp[1:50])
+# x,y 구분
+x = Sta_Fo %>% ungroup %>% select(-activity) %>% data.matrix
+y = Sta_Fo$activity
+
+# xgboost 모델 학습(10-fold)
+set.seed(1004)
+Sta_Fo_model = xgb.cv(data = x,label = as.integer(as.factor(y))-1, num_class = levels(as.factor(y)) %>% length,
+                   nfold = 10, nrounds = 500, early_stopping_rounds = 8, booster = 'gbtree',
+                   objective = 'multi:softprob', eval_metric = 'mlogloss', 
+                   verbose = F, prediction = T)
+
+# 예측 데이터 생성(max.col 사용해서 가장 큰값 추출)
+pred_df = Sta_Fo_model$pred %>% as.data.frame %>% 
+  mutate(pred = levels(as.factor(y))[max.col(.)] %>% as.factor, actual = as.factor(y))
+
+pred_df %>% select(pred,actual) %>% table
+
+# confusionMatrix 생성
+Sta_Fo_conf<- caret::confusionMatrix(pred_df$pred, pred_df$actual)
+Sta_Fo_conf
+
+## 각 특징별로 상위 변수들만 추출하여 예측 ##
+xgb.ggplot.importance(Static_imp[1:30])
+xgb.ggplot.importance(Peak_imp[1:30])
+xgb.ggplot.importance(Fourier_imp[1:30])
+xgb.ggplot.importance(Chpoint_imp[1:29])
+
+Staitc_imp_df<- cbind(d = HAR_summary_extend$d,HAR_summary_extend[,Static_imp[1:30]$Feature])
+Peak_imp_df<- cbind(d = Peak_final2$d, Peak_final2[,Peak_imp[1:30]$Feature])
+Fourier_imp_df<- cbind(d = fft_data_summary$d,fft_data_summary[,Fourier_imp[1:30]$Feature])
+Chpoint_imp_df<- cbind(d = ch_pt2$d, activity = ch_pt2$activity, ch_pt2[,Chpoint_imp[1:29]$Feature])
+
+SP_df<- merge(Staitc_imp_df, Peak_imp_df, by = 'd')
+SPF_df<- merge(SP_df, Fourier_imp_df, by = 'd')
+import_df<-  merge(SPF_df, Chpoint_imp_df, by = 'd')
+
+
+# x,y 구분
+x = import_df %>% ungroup %>% select(-d, -activity) %>% data.matrix
+y = import_df$activity
+
+# xgboost 모델 학습(10-fold)
+set.seed(1004)
+import_model = xgb.cv(data = x,label = as.integer(as.factor(y))-1, num_class = levels(as.factor(y)) %>% length,
+                   nfold = 10, nrounds = 500, early_stopping_rounds = 8, booster = 'gbtree',
+                   objective = 'multi:softprob', eval_metric = 'mlogloss', 
+                   verbose = F, prediction = T)
+
+# 예측 데이터 생성(max.col 사용해서 가장 큰값 추출)
+pred_df = import_model$pred %>% as.data.frame %>% 
+  mutate(pred = levels(as.factor(y))[max.col(.)] %>% as.factor, actual = as.factor(y))
+
+pred_df %>% select(pred,actual) %>% table
+
+# confusionMatrix 생성
+import_conf<- caret::confusionMatrix(pred_df$pred, pred_df$actual)
+import_conf
