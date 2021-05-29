@@ -19,7 +19,7 @@
 
 - 분석된 결과를 가지고 R에서 제공하는 shiny 패키지를 활용하여 웹사이트를 구축하였습니다.
 
-[사이트 링크](https://www.kaggle.com/malekzadeh/motionsense-dataset)
+[사이트 링크](https://jaaaamj0711.shinyapps.io/shiny/)
 
 
 ### 분석 참고 파일
