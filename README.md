@@ -34,7 +34,7 @@
 
 ### 분석 참고 파일
 
-[- 변수 설명](https://github.com/jaaaamj0711/Unstructured_Data_Analysis/blob/main/mobile%20phone/%E1%84%87%E1%85%A7%E1%86%AB%E1%84%89%E1%85%AE%20%E1%84%89%E1%85%A5%E1%86%AF%E1%84%86%E1%85%A7%E1%86%BC.docx)  
+[- 변수 설명](https://github.com/jaaaamj0711/Unstructured_Data_Analysis/blob/main/%EB%B3%80%EC%88%98%20%EC%84%A4%EB%AA%85.pdf)  
 
 [- 분석 코드](https://github.com/jaaaamj0711/Unstructured_Data_Analysis/blob/main/code_result.R)  
 
