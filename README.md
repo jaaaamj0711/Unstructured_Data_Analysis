@@ -36,7 +36,7 @@
 
 [- 변수 설명](https://github.com/jaaaamj0711/Unstructured_Data_Analysis/blob/main/mobile%20phone/%E1%84%87%E1%85%A7%E1%86%AB%E1%84%89%E1%85%AE%20%E1%84%89%E1%85%A5%E1%86%AF%E1%84%86%E1%85%A7%E1%86%BC.docx)  
 
-[- 분석 코드](https://github.com/jaaaamj0711/Unstructured_Data_Analysis/blob/main/mobile%20phone/code_result.R)  
+[- 분석 코드](https://github.com/jaaaamj0711/Unstructured_Data_Analysis/blob/main/code_result.R)  
 
-[- 샤이니 앱 코드](https://github.com/jaaaamj0711/Unstructured_Data_Analysis/blob/main/mobile%20phone/app.R)
+[- 샤이니 앱 코드](https://github.com/jaaaamj0711/Unstructured_Data_Analysis/blob/main/app.R)
 
